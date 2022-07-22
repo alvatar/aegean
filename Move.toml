@@ -1,0 +1,15 @@
+[package]
+name = "Aegean"
+version = "0.0.1"
+
+[addresses]
+Aegean = "_"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "devnet" }
+MoveNursery = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/nursery", rev = "devnet" }
+#UnitTest = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib/", rev = "devnet" }
+
+
+#AptosFramework = { local = "../aptos-core/aptos-move/framework/aptos-framework" }
+#MoveNursery = { local = "../aptos-core/aptos-move/framework/move-stdlib/nursery"}
