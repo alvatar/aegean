@@ -31,78 +31,78 @@ module Aegean::Amm {
     }
 
     struct Provider has key, store, drop, copy {
-        amountToken1: u64,
-        amountToken2: u64,
+        amount_token_1: u64,
+        amount_token_2: u64,
     }
 
     public entry fun provide1<TokenType1, TokenType2>
-    (account: signer, poolAccountAddr: address, amountToken1: u64)
+    (account: signer, pool_account_addr: address, amount_token_1: u64)
     acquires Pool {
         let account_addr = signer::address_of(&account);
-        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(poolAccountAddr);
+        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(pool_account_addr);
         
-        let amountToken2 = computeToken2AmountGivenToken1(pool,amountToken1);
+        let amount_token_2 = computeToken2AmountGivenToken1(pool,amount_token_1);
         let provider: &mut Provider;
         
         if (table::contains(&pool.providers, account_addr)) {
             provider = table::borrow_mut(&mut pool.providers, account_addr);
-            provider.amountToken1 + provider.amountToken1 + amountToken1;
-            provider.amountToken2 + provider.amountToken2 + amountToken2;
+            provider.amount_token_1 + provider.amount_token_1 + amount_token_1;
+            provider.amount_token_2 + provider.amount_token_2 + amount_token_2;
         } else {
             provider = &mut Provider {
-                amountToken1,
-                amountToken2,
+                amount_token_1,
+                amount_token_2,
             };
             table::add(&mut pool.providers, account_addr, *provider);
         };
         
         // The coin is withdrawn from the signer, but added to the pool directly (not the pool owner)
         // This is necessary so that the owner of the account cannot extract the coin through another contract.
-        let coin1 = coin::withdraw<TokenType1>(&account, amountToken1);
+        let coin1 = coin::withdraw<TokenType1>(&account, amount_token_1);
         coin::merge<TokenType1>(&mut pool.token1, coin1);
 
-        let coin2 = coin::withdraw<TokenType2>(&account, amountToken2);
+        let coin2 = coin::withdraw<TokenType2>(&account, amount_token_2);
         coin::merge<TokenType2>(&mut pool.token2, coin2);
     }
 
-    public entry fun swap1<TokenType1: key, TokenType2>(account: signer, poolAccountAddr: address, amountToken1: u64)
+    public entry fun swap1<TokenType1: key, TokenType2>(account: signer, pool_account_addr: address, amount_token_1: u64)
     acquires Pool {
         let account_addr = signer::address_of(&account);
-        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(poolAccountAddr);
+        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(pool_account_addr);
         
-        let coin1 = coin::withdraw<TokenType1>(&account, amountToken1);
+        let coin1 = coin::withdraw<TokenType1>(&account, amount_token_1);
         coin::merge<TokenType1>(&mut pool.token1, coin1);
 
-        let amountToken2 = computeToken2AmountGivenToken1(pool, amountToken1);
-        let coin2 = coin::extract<TokenType2>(&mut pool.token2, amountToken2);
+        let amount_token_2 = computeToken2AmountGivenToken1(pool, amount_token_1);
+        let coin2 = coin::extract<TokenType2>(&mut pool.token2, amount_token_2);
         coin::deposit<TokenType2>(account_addr, coin2);
     }
 
-    public entry fun swap2<TokenType1: key, TokenType2>(account: signer, poolAccountAddr: address, amountToken2: u64)
+    public entry fun swap2<TokenType1: key, TokenType2>(account: signer, pool_account_addr: address, amount_token_2: u64)
     acquires Pool {
         let account_addr = signer::address_of(&account);
-        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(poolAccountAddr);
+        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(pool_account_addr);
         
-        let coin2 = coin::withdraw<TokenType2>(&account, amountToken2);
+        let coin2 = coin::withdraw<TokenType2>(&account, amount_token_2);
         coin::merge<TokenType2>(&mut pool.token2, coin2);
 
-        let amountToken1 = computeToken1AmountGivenToken2(pool, amountToken2);
-        let coin1 = coin::extract<TokenType1>(&mut pool.token1, amountToken1);
+        let amount_token_1 = computeToken1AmountGivenToken2(pool, amount_token_2);
+        let coin1 = coin::extract<TokenType1>(&mut pool.token1, amount_token_1);
         coin::deposit<TokenType1>(account_addr, coin1);
     }
 
     fun computeToken2AmountGivenToken1<TokenType1, TokenType2>(pool: &Pool<TokenType1, TokenType2>, amount: u64) : u64 {
         let after1 = coin::value<TokenType1>(&pool.token1) + amount;
         let after2 = pool.k / after1;
-        let amountToken2 = coin::value<TokenType2>(&pool.token2) - after2;
-        amountToken2
+        let amount_token_2 = coin::value<TokenType2>(&pool.token2) - after2;
+        amount_token_2
     }
 
     fun computeToken1AmountGivenToken2<TokenType1, TokenType2>(pool: &Pool<TokenType1, TokenType2>, amount: u64) : u64 {
         let after2 = coin::value<TokenType2>(&pool.token2) + amount;
         let after1 = pool.k / after2;
-        let amountToken1 = coin::value<TokenType1>(&pool.token1) - after1;
-        amountToken1
+        let amount_token_1 = coin::value<TokenType1>(&pool.token1) - after1;
+        amount_token_1
     }
 
     #[test_only]
