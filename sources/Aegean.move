@@ -78,11 +78,31 @@ module Aegean::Amm {
         coin::deposit<TokenType2>(account_addr, coin2);
     }
 
+    public entry fun swap2<TokenType1: key, TokenType2>(account: signer, poolAccountAddr: address, amountToken2: u64)
+    acquires Pool {
+        let account_addr = signer::address_of(&account);
+        let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(poolAccountAddr);
+        
+        let coin2 = coin::withdraw<TokenType2>(&account, amountToken2);
+        coin::merge<TokenType2>(&mut pool.token2, coin2);
+
+        let amountToken1 = computeToken1AmountGivenToken2(pool, amountToken2);
+        let coin1 = coin::extract<TokenType1>(&mut pool.token1, amountToken1);
+        coin::deposit<TokenType1>(account_addr, coin1);
+    }
+
     fun computeToken2AmountGivenToken1<TokenType1, TokenType2>(pool: &Pool<TokenType1, TokenType2>, amount: u64) : u64 {
         let after1 = coin::value<TokenType1>(&pool.token1) + amount;
         let after2 = pool.k / after1;
         let amountToken2 = coin::value<TokenType2>(&pool.token2) - after2;
         amountToken2
+    }
+
+    fun computeToken1AmountGivenToken2<TokenType1, TokenType2>(pool: &Pool<TokenType1, TokenType2>, amount: u64) : u64 {
+        let after2 = coin::value<TokenType2>(&pool.token2) + amount;
+        let after1 = pool.k / after2;
+        let amountToken1 = coin::value<TokenType1>(&pool.token1) - after1;
+        amountToken1
     }
 
     #[test_only]
@@ -96,34 +116,6 @@ module Aegean::Amm {
         mint_cap: coin::MintCapability<DelphiCoin>,
         burn_cap: coin::BurnCapability<DelphiCoin>,
     }
-
-    // #[test_only]
-    // public fun delphi_initialize(account: &signer): (coin::MintCapability<Delphicoin>, coin::BurnCapability<Delphicoin>) {
-    //     //SystemAddresses::assert_core_resource(core_resource);
-
-    //     let (mint_cap, burn_cap) = coin::initialize<Delphicoin>(
-    //         account,
-    //         string::utf8(b"Test coin"),
-    //         string::utf8(b"TC"),
-    //         6, /* decimals */
-    //         false, /* monitor_supply */
-    //     );
-
-    //     // Mint the core resource account Testcoin for gas so it can execute system transactions.
-    //     coin::register_internal<Delphicoin>(account);
-    //     let coins = coin::mint<Delphicoin>(
-    //         18446744073709551615,
-    //         &mint_cap,
-    //     );
-    //     coin::deposit<Delphicoin>(signer::address_of(account), coins);
-
-    //     move_to(account, DelphicoinCapabilities {
-    //         mint_cap: copy mint_cap,
-    //         burn_cap: copy burn_cap,
-    //         });
-    //     (mint_cap, burn_cap)
-    // }
-
 
     #[test_only]
     struct AlvatarCoin{}
