@@ -44,12 +44,13 @@ module Aegean::Amm {
         let account_addr = signer::address_of(account);
         let pool = borrow_global_mut<Pool<TokenType1, TokenType2>>(pool_account_addr);
 
-        if (coin::value(&pool.token1) != 0 && coin::value(&pool.token2) != 0) {
-            assert!(
-                amount_token_2 == computeToken2AmountGivenToken1(pool,amount_token_1),
-                EUNBALANCING_OPERATION,
-                )
-        };
+        // TODO: check that the amounts are correct
+        // if (coin::value(&pool.token1) != 0 && coin::value(&pool.token2) != 0) {
+        //     assert!(
+        //         amount_token_2 == computeToken2AmountGivenToken1(pool,amount_token_1),
+        //         EUNBALANCING_OPERATION,
+        //         )
+        // };
         
         let provider: &mut Provider;
         
@@ -88,8 +89,8 @@ module Aegean::Amm {
         let coin2 = coin::extract<TokenType2>(&mut pool.token2, amount_token_2);
         coin::deposit<TokenType2>(account_addr, coin2);
 
-        // TODO: we update k because the product is only approximately constant. Figure this out.
-        pool.k = coin::value(&pool.token1) * coin::value(&pool.token2);
+        // TODO: The product is only approximately constant. Figure this out.
+        // pool.k = coin::value(&pool.token1) * coin::value(&pool.token2);
     }
 
     public entry fun swap2<TokenType1: key, TokenType2: key>(account: &signer, pool_account_addr: address, amount_token_2: u64)
@@ -104,8 +105,8 @@ module Aegean::Amm {
         let coin1 = coin::extract<TokenType1>(&mut pool.token1, amount_token_1);
         coin::deposit<TokenType1>(account_addr, coin1);
 
-        // TODO: we update k because the product is only approximately constant. Figure this out.
-        pool.k = coin::value(&pool.token1) * coin::value(&pool.token2);
+        // TODO: The product is only approximately constant. Figure this out.
+        // pool.k = coin::value(&pool.token1) * coin::value(&pool.token2);
     }
 
     fun computeToken2AmountGivenToken1<TokenType1, TokenType2>(pool: &Pool<TokenType1, TokenType2>, amount: u64) : u64 {
